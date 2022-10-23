@@ -1,0 +1,209 @@
+import pexpect
+  #Define variables
+ip_address = '192.168.56.101'
+username = 'cisco'
+password = 'cisco123!'
+
+connectionType = input("Do you want to connect via SSH or Telnet?: ")
+if connectionType == 'Telnet':
+  
+    #Create telnet session
+    session = pexpect.spawn('telnet ' + ip_address, encoding='utf-8',
+                                timeout=20)
+    result = session.expect (['Username:', pexpect.TIMEOUT])
+
+    # Check for error, if exists then display error and exists
+    if result != 0:
+        print('---Failure! creating sessions for: ', ip_address)
+        exit()
+
+    # Session is expecting username, enter details
+    session.sendline(username)
+    result = session.expect (['Password:', pexpect.TIMEOUT])
+
+    #Check for error, if exists then display error and exit
+    if result != 0:
+        print ('--- FAILURE! entering username: ', username)
+        exit()
+
+    #Session is expecting password, enter details
+    session.sendline(password)
+    result = session.expect (['#', pexpect.TIMEOUT])
+
+    # Check for error, if exists then display error and exit
+    if result != 0:
+        print('---FAILURE! entering password: ', password)
+        exit()
+
+    # Display a success message if it works 
+    print('---------------------------------')
+    print('')
+    print('--- Sucess! connecting to: ', ip_address)
+    print('---               Username: ', username)
+    print('---               Password: ', password)
+    print('')
+    print('----------------------------------')
+
+    #Terminate telnet to advice and close session
+    session.sendline('quit')
+    session.close()
+elif connectionType == "ssh":
+    
+######################################
+
+# Define variables
+    ip_address = '192.168.56.101'
+    username = 'prne'
+    password = 'cisco123!'
+    password_enable = 'class123!'
+
+# Create the SSH session
+    session = pexpect.spawn('ssh ' + username + '@' + ip_address, encoding='utf-8', timeout=20)
+    result = session.expect(['Password:', pexpect.TIMEOUT, pexpect.EOF])
+
+# Check for error, if exists then display error and exit
+    if result != 0:
+        print('--- FAILURE! creating session for: ', ip_address)
+        exit()
+
+#Session expecting password, enter details
+    session.sendline(password)
+    result = session.expect (['>', pexpect.TIMEOUT, pexpect.EOF])
+
+# Check for error, if exists then display error and exit
+    if result != 0:
+        print('--- FAILURE! entering password: ', password)
+        exit()
+
+# Enter enable mode 
+    session.sendline('enable')
+    result = session.expect (['Password: ', pexpect.TIMEOUT, pexpect.EOF])
+   
+# Check for error, if exists then display error and exit
+    if result != 0:
+        print('--- FAILURE entering enable mode')
+        exit ()
+
+# Send enable password details
+    session.sendline(password_enable)
+    result = session.expect(['#', pexpect.TIMEOUT, pexpect.EOF])
+
+# Check for error, if exists then display error and exit
+    if result != 0:
+        print('--- FAILURE! entering enable mode after sending password')
+        exit ()
+
+# Enter configuration mode
+    session.sendline('configure terminal')
+    result = session.expect([r'.\(config\)#', pexpect.TIMEOUT, pexpect.EOF])
+
+# Check for error, if exists then display error and exit
+    if result != 0:
+        print('--- FAILURE! entering config mode')
+        exit ()
+
+# Change the hostname to R1
+    session.sendline('hostname R1')
+    result = session.expect([r'R1\(config\)#', pexpect.TIMEOUT, pexpect.EOF])
+
+# Check for error, if exists then display error and exit
+    if result != 0:
+        print = ('--- Failure! setting hostname')
+
+# Exit config mode
+    session.sendline('exit')
+
+# Exit enable mode 
+    session.sendline('exit')
+
+# Display a success message if works
+    print('---------------------------------------')
+    print('')
+    print('--- Success! connecting to: ', ip_address)
+    print('---              Username: ', username)
+    print('---              Password: ', password)
+    print('')
+    print('----------------------------------------')
+
+# Terminate SSH session
+    session.close()
+else:
+    print("Option not found")
+    
+##########################################################
+
+import csv
+import os
+from datetime import date 
+import smtplib
+from netmiko import ConnectHandler
+import re
+import zipline
+import sys
+today = date.today()
+target_dir = f"/tftpdata/Region1/{today}"
+if not os.path.isdir(target_dir):
+    os.makedirs(target_dir)
+    print(f"\nCreated {target_dir} folder successfully")
+else:
+    print(f"\n{target_dir} folder already exsists!")
+# For Cisco Username and password
+user = "cisco"
+pwd = "XXXXXXXX"
+# For Barcode Username and password
+user1 = "user"
+pwd1 = "XXXXXXXX"
+#For Aruba Username and Password
+user2 = "manager"
+pwd2 = "XXXXXX"
+with open(file="iplist.csv", mode="r") as iplist:
+    reader = csv.reader(iplist)
+    Cisco = [
+        {
+            "Device_type": "cisco_s300",
+            "ip": ip.string(),
+            "username": usr,
+            "password": pwd,
+            "fast_cli": False,
+        }
+        
+####################################################################
+
+# import the modules you want to call        
+import netmiko, getpass
+
+# grab some info from the user
+ip = raw_input('Device IP: ')
+un = raw_input('Username: ')
+pw = getpass.getpass()
+
+# define your device
+cisco_ios = {
+    'device_type': 'cisco_ios',
+    'ip': ip,
+    'username': un,
+    'password': pw,
+}
+
+# connect to the device w/ netmiko
+net_connect = netmiko.ConnectHandler(**cisco_ios)
+
+# get the prompt as a string
+prompt = net_connect.find_prompt()
+
+hostname = net_connect.send_command('show run | i host')
+hostname.split(" ")
+col1,col2 = hostname.split(" ")
+print "Working on " + col2
+filename = col2 + '.txt'
+
+showrun = net_connect.send_command('show run')
+showvlan = net_connect.send_command('show vlan')
+showver = net_connect.send_command('show ver')
+log_file = open(filename, "a")   # in append mode
+log_file.write(showrun)
+log_file.write("\n")
+log_file.write(showvlan)
+log_file.write("\n")
+log_file.write(showver)
+log_file.write("\n")
